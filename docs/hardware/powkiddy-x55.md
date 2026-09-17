@@ -1,67 +1,91 @@
 # PowKiddy X55 Hardware Reference
 
 This document describes the **PowKiddy X55** as the first physical
-target for **FerroOS**.
+target for **FeROS**.
 
 The goal is not to treat the X55 as a Linux handheld, but as an embedded
-ARM64 platform on which FerroOS can eventually boot and operate
+ARM64 platform on which FeROS can eventually boot and operate
 independently.
 
-FerroOS is intended to own the complete software stack, from early boot
+FeROS is intended to own the complete software stack, from early boot
 through hardware abstraction, kernel services, drivers, graphics, input,
 audio, storage, and the final user interface.
 
 ------------------------------------------------------------------------
 
-## FerroOS Context
+## FeROS Context
 
-FerroOS started as an experiment around retro-gaming operating systems
-and embedded platforms.
+FeROS — **Ferrite Retro Operating System** — is an independent operating
+system being built from scratch for retro handhelds and embedded gaming
+hardware.
 
-The original project direction used Linux, Docker, Buildroot, RetroArch,
-and existing boot infrastructure as a development path.
+The project originally began as **FerroOS**, an experiment that explored
+Linux, Docker, Buildroot, RetroArch, and existing boot infrastructure.
+That direction is now historical context rather than the target
+architecture.
 
-The project is now being reconsidered with a much more ambitious goal:
+The current project identity is:
 
-> Build an independent operating system rather than a Linux
-> distribution.
+- **Fe** — Ferrite, with an additional association to iron (`Fe`), hardware,
+  physicality, and low-level engineering.
+- **R** — Retro.
+- **OS** — Operating System.
 
-The current working interpretation of the name is:
-
--   **Fer** --- inspired by ferrite / ferrum, representing hardware,
-    core material, and low-level systems.
--   **ro** --- retro.
--   **OS** --- Operating System.
-
-The exact original naming decision is no longer certain, but this
-interpretation reflects the current identity of the project well.
+The PowKiddy X55 is the first development platform, not the permanent
+definition of FeROS. The long-term goal includes custom handheld hardware,
+custom PCBs, physical controls, enclosures, and future boards designed
+specifically for FeROS.
 
 ### Vision
 
-> A superb, performance-focused retro gaming operating system intended
-> for fully customizable handheld consoles and embedded platforms.
+> Build a performance-first independent operating system for retro handhelds
+> and embedded gaming hardware, with deliberate ownership and visibility
+> across the software stack.
 
-FerroOS should ultimately control its own:
+FeROS should ultimately control its own:
 
--   Boot process
--   Kernel
--   Memory management
--   Task scheduling
--   Hardware abstraction
--   Device drivers
--   Input subsystem
--   Graphics stack
--   Audio stack
--   Storage layer
--   Filesystems
--   Runtime environment
--   Gaming frontend
+- Boot code after the unavoidable silicon/vendor bootstrap boundary
+- Kernel
+- Memory management
+- Task scheduling
+- Hardware abstraction
+- Device drivers
+- Input subsystem
+- Graphics stack
+- Audio stack
+- Storage layer
+- Filesystems
+- Runtime environment
+- Application/game APIs
+- Gaming frontend
 
-Linux may be studied, used as a hardware reference, or used temporarily
-as a diagnostic environment, but it is not intended to become the
-FerroOS runtime.
+Linux may be studied as a hardware reference or used as a temporary
+diagnostic/reconnaissance environment, but it is not the FeROS runtime.
 
-------------------------------------------------------------------------
+The initial RK3566 bring-up may temporarily retain the minimum vendor
+bootstrap required to initialize hardware such as DRAM. Such components
+are bootstrap dependencies, not part of the FeROS kernel, and should be
+kept behind a clearly documented boundary.
+
+### Engineering Philosophy
+
+FeROS follows several core rules:
+
+- Hardware-first.
+- Predictable behavior over unnecessary abstraction.
+- Minimal magic; important layers should remain observable.
+- Generic kernel code must not know that the PowKiddy X55 exists.
+- Architecture-, SoC-, and board-specific responsibilities must remain
+  separated.
+- Hardware constants must be traceable to technical documentation,
+  trusted reference implementations, board evidence, or direct
+  measurement.
+- Performance and debuggability are design concerns from the beginning.
+- Documentation is part of the engineering product.
+
+A concise expression of this philosophy is:
+
+> **Close to the metal.**
 
 # PowKiddy X55
 
@@ -69,7 +93,7 @@ FerroOS runtime.
 
 The PowKiddy X55 is an ARM-based handheld gaming device.
 
-For FerroOS, it should be viewed less as a gaming console and more as a
+For FeROS, it should be viewed less as a gaming console and more as a
 compact embedded computer containing:
 
 -   ARM64 CPU cores
@@ -140,7 +164,7 @@ hardware required to build the system.
 
 -   ARM Mali-G52 family
 
-For FerroOS this is a later-stage target.
+For FeROS this is a later-stage target.
 
 Initial system bring-up should not depend on GPU acceleration.
 
@@ -166,7 +190,7 @@ Hardware revisions may differ.
 The exact installed memory and initialization requirements should
 eventually be verified directly on the target device.
 
-Memory is one of the first major responsibilities of FerroOS.
+Memory is one of the first major responsibilities of FeROS.
 
 The system will eventually need to manage:
 
@@ -209,7 +233,7 @@ display interface
 LCD panel
 ```
 
-The LCD panel itself does not understand FerroOS.
+The LCD panel itself does not understand FeROS.
 
 The operating system must correctly initialize the SoC display hardware
 and communicate with the physical panel.
@@ -240,7 +264,7 @@ At the OS level they may be exposed through:
 -   dedicated controllers
 -   other SoC peripherals
 
-FerroOS should eventually convert those hardware events into a common
+FeROS should eventually convert those hardware events into a common
 internal input model.
 
 ``` text
@@ -250,7 +274,7 @@ driver
       ↓
 input event
       ↓
-FerroOS input subsystem
+FeROS input subsystem
       ↓
 game / UI
 ```
@@ -268,7 +292,7 @@ disposable laboratory media.
 ``` text
 microSD
 ├── boot area
-├── FerroOS image
+├── FeROS image
 ├── system data
 └── game / user storage
 ```
@@ -276,7 +300,7 @@ microSD
 During early development it may not be necessary to use conventional
 partitions or filesystems at all.
 
-The first FerroOS images may simply occupy known raw sectors on the
+The first FeROS images may simply occupy known raw sectors on the
 card.
 
 ------------------------------------------------------------------------
@@ -285,30 +309,32 @@ card.
 
 Current laboratory card:
 
--   Kingston Canvas Go! Plus
--   Capacity: 256 GB
--   microSDXC
--   U3
--   V30
--   A2
+- Capacity: approximately 32 GB
+- Logical sector size observed on macOS: 512 bytes
+- Dedicated to FeROS bring-up and destructive development experiments
 
-This card can be safely used for:
+This card can be used for:
 
--   raw disk images
--   experimental partition layouts
--   bootloader experiments
--   kernel images
--   filesystem experiments
--   destructive development testing
+- raw disk images
+- experimental partition layouts
+- bootloader experiments
+- kernel images
+- filesystem experiments
+- destructive development testing
 
 The original PowKiddy system card should remain untouched as a recovery
 and hardware-reference environment.
+
+The device identifier assigned by macOS (for example `/dev/diskN`) must
+never be assumed to remain stable. It must be re-verified before every
+destructive raw-device operation.
+
 
 ------------------------------------------------------------------------
 
 # Boot Architecture
 
-A critical concept for FerroOS is that the CPU does not immediately
+A critical concept for FeROS is that the CPU does not immediately
 execute the operating system when the Power button is pressed.
 
 There is a chain of execution.
@@ -334,28 +360,28 @@ This is normally called the **Boot ROM**.
 
 Its job is to find and load the next executable stage.
 
-FerroOS therefore does not completely own the machine from the first CPU
+FeROS therefore does not completely own the machine from the first CPU
 instruction.
 
-There is always some vendor silicon initialization before FerroOS begins
+There is always some vendor silicon initialization before FeROS begins
 executing.
 
 ------------------------------------------------------------------------
 
 # What Is Generic and What Is Device-Specific?
 
-A major FerroOS design principle should be separating generic
+A major FeROS design principle should be separating generic
 operating-system functionality from platform-specific implementation.
 
-The PowKiddy X55 is only one target.
+The PowKiddy X55 is the first development target and hardware laboratory, not the final FeROS hardware definition.
 
-FerroOS should eventually support other handhelds and embedded systems
+FeROS should eventually support other handhelds and embedded systems
 without rewriting the complete OS.
 
 A useful architecture is:
 
 ``` text
-                 FerroOS
+                 FeROS
 
         ┌─────────────────────┐
         │ Applications / UI   │
@@ -485,12 +511,12 @@ This information is specific to the board.
 
 ------------------------------------------------------------------------
 
-# Recommended FerroOS Hardware Model
+# Recommended FeROS Hardware Model
 
 A useful long-term structure could therefore be:
 
 ``` text
-ferroos/
+feros/
 ├── arch/
 │   └── aarch64/
 │
@@ -532,7 +558,7 @@ This separation is important.
 The goal should be:
 
 ``` text
-FerroOS
+FeROS
    +
 architecture
    +
@@ -544,7 +570,7 @@ board
 rather than:
 
 ``` text
-FerroOS == PowKiddy X55 firmware
+FeROS == PowKiddy X55 firmware
 ```
 
 ------------------------------------------------------------------------
@@ -587,7 +613,7 @@ hardware are physically connected.
 ## Operating System
 
 ``` text
-FerroOS
+FeROS
 ```
 
 Software responsible for controlling the machine and providing execution
@@ -595,7 +621,7 @@ services to applications.
 
 ------------------------------------------------------------------------
 
-# FerroOS Target Abstraction
+# FeROS Target Abstraction
 
 A useful mental model is:
 
@@ -605,7 +631,7 @@ A useful mental model is:
                        Application
                            │
                            ▼
-                       FerroOS API
+                       FeROS API
                            │
                            ▼
                          Kernel
@@ -657,12 +683,12 @@ Linux can reveal information about:
 -   audio
 -   kernel drivers
 
-This does not mean FerroOS depends on Linux.
+This does not mean FeROS depends on Linux.
 
 Linux becomes a reference implementation and diagnostic instrument.
 
 The knowledge discovered there can later be independently implemented
-inside FerroOS.
+inside FeROS.
 
 The development progression may therefore be:
 
@@ -675,7 +701,7 @@ Documentation
      ↓
 Bare-metal experiment
      ↓
-FerroOS boot code
+FeROS boot code
      ↓
 UART output
      ↓
@@ -700,32 +726,34 @@ Gaming environment
 
 ------------------------------------------------------------------------
 
-# First FerroOS Milestone
+# First FeROS Milestone
 
 The first milestone should intentionally be extremely small.
 
-Something comparable to:
+The current bring-up target is:
 
-``` text
+```text
 Power On
    ↓
-Boot ROM
+RK3566 BootROM
    ↓
-FerroOS entry point
+required early bootstrap / DDR initialization
    ↓
-initialize stack
+FeROS early entry
    ↓
-initialize UART
+establish required CPU state / stack
+   ↓
+initialize verified debug UART
    ↓
 print:
 
-FerroOS
+FeROS
 Hello from RK3566
 ```
 
-No Linux.
+No Linux runtime.
 
-No Buildroot.
+No Buildroot runtime.
 
 No RetroArch.
 
@@ -733,8 +761,14 @@ No graphical interface.
 
 No filesystem.
 
-Just our code executing directly on the machine.
+Just the minimum required bootstrap followed by FeROS code executing
+directly on the machine.
 
-Once this works, FerroOS exists in the literal sense.
+The exact RK3566 BootROM contract, image layout, handoff state, UART
+controller, MMIO address, pinmux, physical pads, and electrical levels
+must be verified before these details become source-code constants.
+
+Once observable FeROS code executes on the physical RK3566, the project
+has achieved its first literal bare-metal bring-up milestone.
 
 Everything after that becomes incremental engineering.
