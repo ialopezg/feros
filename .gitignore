@@ -1,18 +1,27 @@
+# Operating System
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
 # System
 *.img
 *.log
 *.bak
 *.tmp
 
-# Python
-__pycache__/
+# Build
+/build/
 
-# Node
-node_modules/
-
-# Docker
-*.pid
-*.sock
+# Releases
+/releases/
 
 # Editor/IDE
 .idea/
