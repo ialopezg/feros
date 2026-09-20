@@ -3,11 +3,8 @@
  *
  * RK3566 early UART support.
  *
- * This implementation is intentionally written in AArch64 assembly for the
- * initial bare-metal bring-up. It provides the minimum functionality required
- * to emit characters before a C runtime environment exists.
- *
- * The normal RK3566 UART driver should eventually live in freestanding C.
+ * This implementation provides the minimum functionality required to emit
+ * characters before a C runtime environment exists.
  */
 
 .section .text
@@ -39,10 +36,10 @@
  * The routine assumes UART2 has already been initialized by the preceding
  * boot environment. This is intentional for the first FeROS bring-up.
  */
-.global rk3566_uart_putc
-.type rk3566_uart_putc, %function
+.global platform_uart_putc
+.type platform_uart_putc, %function
 
-rk3566_uart_putc:
+platform_uart_putc:
     ldr     x1, =UART2_BASE
 
 1:
@@ -54,4 +51,4 @@ rk3566_uart_putc:
 
     ret
 
-.size rk3566_uart_putc, . - rk3566_uart_putc
+.size platform_uart_putc, . - platform_uart_putc
