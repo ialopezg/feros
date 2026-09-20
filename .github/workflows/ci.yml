@@ -3,6 +3,7 @@ name: FeROS CI
 on:
   push:
     branches: [main]
+
   pull_request:
     branches: [main]
 
@@ -22,30 +23,8 @@ jobs:
             gcc-aarch64-linux-gnu \
             binutils-aarch64-linux-gnu
 
-      - name: Build AArch64 sources
-        run: |
-          mkdir -p build
+      - name: Build FeROS
+        run: make CROSS_COMPILE=aarch64-linux-gnu-
 
-          aarch64-linux-gnu-gcc \
-            -c \
-            -ffreestanding \
-            -nostdlib \
-            -nostartfiles \
-            arch/aarch64/boot/start.S \
-            -o build/start.o
-
-          aarch64-linux-gnu-gcc \
-            -c \
-            -ffreestanding \
-            -nostdlib \
-            -nostartfiles \
-            soc/rockchip/rk3566/uart.S \
-            -o build/uart.o
-
-      - name: Inspect AArch64 objects
-        run: |
-          file build/start.o
-          file build/uart.o
-
-          aarch64-linux-gnu-objdump -d build/start.o
-          aarch64-linux-gnu-objdump -d build/uart.o
+      - name: Inspect FeROS build
+        run: make CROSS_COMPILE=aarch64-linux-gnu- inspect
