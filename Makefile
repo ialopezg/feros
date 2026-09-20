@@ -9,7 +9,7 @@ OBJDUMP := $(CROSS_COMPILE)objdump
 # Platform
 # ---------------------------------------------------------------------------
 
-p ?= x55
+p ?= all
 
 BUILD_ROOT := build
 BUILD_DIR  := $(BUILD_ROOT)/$(p)
@@ -26,9 +26,6 @@ PLATFORM_OBJECT := $(BUILD_DIR)/soc/rockchip/rk3566/uart.o
 else ifeq ($(p),qemu)
 LINKER_SCRIPT   := boards/qemu/virt/linker.ld
 PLATFORM_OBJECT := $(BUILD_DIR)/boards/qemu/virt/uart.o
-
-else
-$(error Unsupported platform "$(p)")
 endif
 
 FEROS_ELF := $(BUILD_DIR)/feros.elf
@@ -52,44 +49,142 @@ RESET    := $(ESC)[0m
 FEROS := $(FE_COLOR)Fe$(R_COLOR)R$(OS_COLOR)OS$(RESET)
 
 # ---------------------------------------------------------------------------
+# Output
+# ---------------------------------------------------------------------------
+
+OUTPUT_WIDTH := 59
+
+define major_separator
+	@printf '%*s\n' $(OUTPUT_WIDTH) '' | tr ' ' '*'
+endef
+
+define minor_separator
+	@printf '%*s\n' $(OUTPUT_WIDTH) '' | tr ' ' '-'
+endef
+
+define major_header
+	$(call major_separator)
+	@printf '%*s\n' $$(( ($(OUTPUT_WIDTH) + $(shell printf '%s' '$(1)' | wc -c | tr -d ' ')) / 2 )) '$(1)'
+	$(call major_separator)
+endef
+
+define build_header
+	@printf '\n$(FEROS): Starting to build: %s ...\n' '$(1)'
+	$(call minor_separator)
+endef
+
+define inspect_header
+	@printf '\n$(FEROS): Starting to inspect: %s ...\n' '$(1)'
+	$(call minor_separator)
+endef
+
+# ---------------------------------------------------------------------------
 # Public targets
 # ---------------------------------------------------------------------------
 
-.PHONY: default x55 qemu all build inspect inspect-platform clean
+.PHONY: default \
+	x55 qemu all \
+	build build-all build-x55 build-qemu build-all-public \
+	inspect inspect-x55 inspect-qemu inspect-all inspect-platform \
+	run run-qemu \
+	clean help
 
 default:
 	@printf "$(FEROS): choose platform:\n\n"; \
-	printf "  1) PowKiddy X55 (Rockchip RK3566)\n"; \
-	printf "  2) QEMU ARM64 virt\n"; \
-	printf "  3) All\n\n"; \
-	printf "Select [1-3]: "; \
+	printf "  1) All\n"; \
+	printf "  2) PowKiddy X55 (Rockchip RK3566)\n"; \
+	printf "  3) QEMU ARM64 virt\n"; \
+	printf "  4) Help\n"; \
+	printf "  5) Quit\n\n"; \
+	printf "Select [1-5]: "; \
 	read choice; \
 	case "$$choice" in \
-		1) $(MAKE) --no-print-directory x55 ;; \
-		2) $(MAKE) --no-print-directory qemu ;; \
-		3) $(MAKE) --no-print-directory all ;; \
-		*) printf "\nInvalid selection.\n"; exit 1 ;; \
+		1) $(MAKE) --no-print-directory all ;; \
+		2) $(MAKE) --no-print-directory x55 ;; \
+		3) $(MAKE) --no-print-directory qemu ;; \
+		4) $(MAKE) --no-print-directory help ;; \
+		5) printf "\n$(FEROS): quit.\n" ;; \
+		*) printf "\nInvalid option\n" ;; \
 	esac
 
+help:
+	@printf "$(FEROS) commands:\n\n"
+	@printf "  make                  Show platform menu\n\n"
+	@printf "  make x55              Build PowKiddy X55\n"
+	@printf "  make qemu             Build QEMU ARM64 virt\n"
+	@printf "  make all              Build all platforms\n\n"
+	@printf "  make inspect x55      Inspect PowKiddy X55\n"
+	@printf "  make inspect qemu     Inspect QEMU ARM64 virt\n"
+	@printf "  make inspect all      Inspect all platforms\n\n"
+	@printf "  make run              Run FeROS on QEMU\n\n"
+	@printf "  make clean            Remove build artifacts\n"
+	@printf "  make help             Show this help\n"
+
 x55:
-	@$(MAKE) --no-print-directory clean
-	@$(MAKE) --no-print-directory \
-		p=x55 \
-		$(if $(filter inspect,$(MAKECMDGOALS)),inspect-platform,build)
+	@if echo "$(MAKECMDGOALS)" | grep -qw run; then \
+		:; \
+	elif echo "$(MAKECMDGOALS)" | grep -qw inspect; then \
+		$(MAKE) --no-print-directory inspect-x55; \
+	else \
+		$(MAKE) --no-print-directory clean; \
+		$(MAKE) --no-print-directory p=x55 build-x55; \
+		printf '\n$(FEROS): process complete.\n'; \
+	fi
 
 qemu:
-	@$(MAKE) --no-print-directory clean
-	@$(MAKE) --no-print-directory \
-		p=qemu \
-		$(if $(filter inspect,$(MAKECMDGOALS)),inspect-platform,build)
+	@if echo "$(MAKECMDGOALS)" | grep -qw run; then \
+		:; \
+	elif echo "$(MAKECMDGOALS)" | grep -qw inspect; then \
+		$(MAKE) --no-print-directory inspect-qemu; \
+	else \
+		$(MAKE) --no-print-directory clean; \
+		$(MAKE) --no-print-directory p=qemu build-qemu; \
+		printf '\n$(FEROS): process complete.\n'; \
+	fi
 
 all:
-	@$(MAKE) --no-print-directory clean
-	@$(MAKE) --no-print-directory p=x55 build
-	@$(MAKE) --no-print-directory p=qemu build
+	@if echo "$(MAKECMDGOALS)" | grep -qw run; then \
+		:; \
+	elif echo "$(MAKECMDGOALS)" | grep -qw inspect; then \
+		$(MAKE) --no-print-directory inspect-all; \
+	else \
+		$(MAKE) --no-print-directory build-all-public; \
+	fi
 
 inspect:
-	@:
+	@if [ "$(words $(filter x55 qemu all,$(MAKECMDGOALS)))" -ne 1 ]; then \
+		printf "Invalid option\n"; \
+	fi
+
+run:
+	@if [ "$(words $(MAKECMDGOALS))" -ne 1 ]; then \
+		printf "Invalid option\n"; \
+	else \
+		$(MAKE) --no-print-directory clean; \
+		$(MAKE) --no-print-directory p=qemu run-qemu; \
+	fi
+
+# ---------------------------------------------------------------------------
+# Build orchestration
+# ---------------------------------------------------------------------------
+
+build-all-public:
+	$(call major_header,Building ALL)
+	@$(MAKE) --no-print-directory clean
+	@$(MAKE) --no-print-directory build-all
+	@printf '\n$(FEROS): process complete.\n'
+
+build-all:
+	@$(MAKE) --no-print-directory p=x55 build-x55
+	@$(MAKE) --no-print-directory p=qemu build-qemu
+
+build-x55:
+	$(call build_header,X55)
+	@$(MAKE) --no-print-directory p=x55 build
+
+build-qemu:
+	$(call build_header,QEMU)
+	@$(MAKE) --no-print-directory p=qemu build
 
 # ---------------------------------------------------------------------------
 # Build
@@ -143,6 +238,30 @@ $(FEROS_BIN): $(FEROS_ELF)
 	@printf "$(FEROS): generated %s\n" "$@"
 
 # ---------------------------------------------------------------------------
+# Inspection orchestration
+# ---------------------------------------------------------------------------
+
+inspect-x55:
+	$(call major_header,Inspecting X55)
+	$(call inspect_header,X55)
+	@$(MAKE) --no-print-directory p=x55 inspect-platform
+	@printf '\n$(FEROS): process complete.\n'
+
+inspect-qemu:
+	$(call major_header,Inspecting QEMU)
+	$(call inspect_header,QEMU)
+	@$(MAKE) --no-print-directory p=qemu inspect-platform
+	@printf '\n$(FEROS): process complete.\n'
+
+inspect-all:
+	$(call major_header,Inspecting ALL)
+	$(call inspect_header,X55)
+	@$(MAKE) --no-print-directory p=x55 inspect-platform
+	$(call inspect_header,QEMU)
+	@$(MAKE) --no-print-directory p=qemu inspect-platform
+	@printf '\n$(FEROS): process complete.\n'
+
+# ---------------------------------------------------------------------------
 # Inspection
 # ---------------------------------------------------------------------------
 
@@ -155,9 +274,21 @@ inspect-platform: build
 	@$(OBJDUMP) -f $(FEROS_ELF)
 
 # ---------------------------------------------------------------------------
+# Execution
+# ---------------------------------------------------------------------------
+
+run-qemu: build
+	$(call major_header,Running QEMU)
+	@printf '\n$(FEROS): Starting QEMU ARM64 virt ...\n\n'
+	@qemu-system-aarch64 \
+		-machine virt \
+		-cpu cortex-a55 \
+		-nographic \
+		-kernel $(FEROS_ELF)
+
+# ---------------------------------------------------------------------------
 # Cleanup
 # ---------------------------------------------------------------------------
 
 clean:
-	@printf "$(FEROS): cleaning build artifacts...\n"
 	@rm -rf $(BUILD_ROOT)
