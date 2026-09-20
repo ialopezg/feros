@@ -4,15 +4,24 @@
 *.bak
 *.tmp
 
-# Python
-__pycache__/
+# Operating System
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
 
-# Node
-node_modules/
+# Build
+/build/
 
-# Docker
-*.pid
-*.sock
+# Releases
+/releases/
 
 # Editor/IDE
 .idea/
