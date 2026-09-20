@@ -1,4 +1,4 @@
-name: FerroOS CI
+name: FeROS CI
 
 on:
   push:
@@ -7,12 +7,45 @@ on:
     branches: [main]
 
 jobs:
-  docker-build:
-    name: Build Docker Image
+  build:
+    name: Build AArch64
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Build Docker image
-        run: docker build -t ferroos-dev .
+      - name: Install AArch64 toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            gcc-aarch64-linux-gnu \
+            binutils-aarch64-linux-gnu
+
+      - name: Build AArch64 sources
+        run: |
+          mkdir -p build
+
+          aarch64-linux-gnu-gcc \
+            -c \
+            -ffreestanding \
+            -nostdlib \
+            -nostartfiles \
+            arch/aarch64/boot/start.S \
+            -o build/start.o
+
+          aarch64-linux-gnu-gcc \
+            -c \
+            -ffreestanding \
+            -nostdlib \
+            -nostartfiles \
+            soc/rockchip/rk3566/uart.S \
+            -o build/uart.o
+
+      - name: Inspect AArch64 objects
+        run: |
+          file build/start.o
+          file build/uart.o
+
+          aarch64-linux-gnu-objdump -d build/start.o
+          aarch64-linux-gnu-objdump -d build/uart.o
