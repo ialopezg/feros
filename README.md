@@ -5,7 +5,8 @@
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Build](https://img.shields.io/github/actions/workflow/status/ialopezg/feros/ci.yml?branch=main)](https://github.com/ialopezg/feros/actions)
 [![Architecture](https://img.shields.io/badge/architecture-AArch64-brightgreen)](docs/engineering-architecture.md)
-[![Target](https://img.shields.io/badge/bring--up-PowKiddy%20X55%20%7C%20RK3566-orange)](docs/hardware/powkiddy-x55.md)
+[![Target](https://img.shields.io/badge/bring--up-PowKiddy%20X55-orange)](docs/hardware/powkiddy-x55.md)
+[![QEMU](https://img.shields.io/badge/platform-QEMU%20ARM64%20-blueviolet.svg)](boards/qemu/virt)
 
 **FeROS** is a performance-first independent operating system being built from
 scratch for retro handhelds and embedded gaming hardware.
@@ -91,6 +92,8 @@ feros/
 ├── boards/
 │   ├── powkiddy/
 │   │   └── x55/
+│   ├── qemu/
+│   │   └── virt/
 │   └── trimui/
 │       └── smart-pro/
 ├── kernel/
@@ -107,6 +110,23 @@ feros/
 
 The TrimUI Smart Pro / Allwinner A133P paths reserve architectural boundaries
 for future investigation. They do not represent implemented hardware support.
+
+---
+
+## Platforms
+
+FeROS currently has two active development platforms:
+
+- **PowKiddy X55 / Rockchip RK3566** — first physical hardware bring-up target.
+- **QEMU ARM64 `virt`** — virtual development platform for executing and validating
+  FeROS Stage 0 independently of the physical X55 bring-up path.
+
+The QEMU platform provides its own board implementation and PL011 early UART
+while sharing the generic AArch64 bootstrap contract. It is a development
+platform, not an emulation of the RK3566 or PowKiddy X55.
+
+The TrimUI Smart Pro / Allwinner A133P remains reserved for future hardware
+investigation and is not yet an active FeROS platform.
 
 ---
 
@@ -140,11 +160,14 @@ early executable stage
 FeROS Stage 0
 ```
 
-FeROS contains its first AArch64 entry point and an RK3566 early UART transmit
-primitive.
+FeROS contains its first AArch64 entry point and platform-independent early
+UART contract, with implementations for the RK3566 and QEMU ARM64 `virt`
+platform.
 
-The immediate milestone remains observable execution of FeROS-owned code on
-the physical X55.
+FeROS Stage 0 is linked as an ELF and raw binary for both supported build
+targets. The QEMU target executes FeROS-owned AArch64 code and produces
+observable UART output. The immediate physical milestone remains observable
+execution of FeROS-owned code on the PowKiddy X55.
 
 ---
 
@@ -158,16 +181,49 @@ The default GNU bare-metal toolchain prefix is:
 aarch64-elf-
 ```
 
-Build:
+Run the interactive platform menu:
 
 ```bash
 make
 ```
 
-Inspect the generated AArch64 objects:
+The menu provides access to all supported build platforms, help, and exit.
+
+Build a specific platform:
 
 ```bash
-make inspect
+make x55
+make qemu
+```
+
+Build all supported platforms:
+
+```bash
+make all
+```
+
+Inspect a platform build:
+
+```bash
+make inspect x55
+make inspect qemu
+make inspect all
+```
+
+Run FeROS under QEMU:
+
+```bash
+make run
+```
+
+QEMU runs Stage 0 on the ARM64 `virt` machine and exposes early output through
+the emulated PL011 UART. Exit the `-nographic` QEMU session with `Ctrl-A`,
+followed by `X`.
+
+Show the supported Make commands:
+
+```bash
+make help
 ```
 
 Clean generated artifacts:
@@ -179,15 +235,19 @@ make clean
 The cross-toolchain prefix can be overridden when required:
 
 ```bash
-make CROSS_COMPILE=aarch64-linux-gnu-
+make CROSS_COMPILE=aarch64-linux-gnu- all
 ```
 
 CI invokes the same repository-owned build definition used during development.
 
-Current artifacts are relocatable AArch64 objects under `build/`, mirroring the
-source hierarchy. A final linked FeROS ELF and raw boot image are intentionally
-not produced until the RK3566 execution-address and handoff contract are
-established.
+Build artifacts are isolated by platform:
+
+```text
+build/x55/feros.elf
+build/x55/feros.bin
+build/qemu/feros.elf
+build/qemu/feros.bin
+```
 
 ---
 
@@ -234,12 +294,14 @@ which hardware evidence supports it.
 - [x] Add RK3566 early UART support.
 - [x] Establish AArch64 bootstrap CI.
 - [x] Establish the repository-owned Make build.
+- [x] Add QEMU ARM64 `virt` as a development platform.
+- [x] Execute FeROS Stage 0 under QEMU with observable UART output.
 
 ### Physical Bring-up
 
 - [ ] Establish the exact Stage 0 load address and handoff state.
-- [ ] Link the first FeROS ELF.
-- [ ] Produce the first raw Stage 0 binary.
+- [x] Link the first FeROS ELF.
+- [x] Produce the first raw Stage 0 binary.
 - [ ] Construct the minimum RK3566-compatible boot image.
 - [ ] Boot from the dedicated development microSD.
 - [ ] Confirm execution of FeROS-owned code.
@@ -280,6 +342,7 @@ which hardware evidence supports it.
 
 ## Releases
 
+- **v0.1.1** — 2026-09-20 — QEMU platform and multi-platform workflow.
 - **v0.1.0** — 2026-09-20 — Bare-metal foundation.
 - **v0.0.1 — Unborn** — 2026-09-20 — Historical FerroOS simulation.
 

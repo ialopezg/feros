@@ -4,6 +4,23 @@ All notable changes to FeROS are documented in this file.
 
 The project follows Semantic Versioning.
 
+## [0.1.1] - 2026-09-20
+
+### Added
+
+- Added QEMU ARM64 `virt` as a development platform.
+- Added PL011 early UART support for QEMU.
+- Added verified FeROS Stage 0 execution under QEMU with observable UART output.
+- Added platform-specific ELF and raw binary builds for X55 and QEMU.
+
+### Changed
+
+- Expanded the Make workflow with explicit X55, QEMU, and all-platform build and inspection targets.
+- Added interactive platform selection, command help, and QEMU execution through `make run`.
+- Updated documentation to distinguish QEMU development from physical X55 bring-up.
+
+---
+
 ## [0.1.0] - 2026-09-20
 
 ### Added
