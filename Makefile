@@ -447,8 +447,21 @@ inspect-all:
 	@$(MAKE) --no-print-directory p=qemu inspect-platform
 	@printf '\n$(FEROS): process complete.\n'
 
-# Inspect low-level bootstrap artifacts for the selected platform.
-inspect-platform: build
+# Inspect existing low-level bootstrap artifacts for the selected platform.
+inspect-platform:
+	@test -f "$(BUILD_DIR)/arch/aarch64/boot/start.o" || { \
+		printf "$(FEROS): missing %s\n" \
+			"$(BUILD_DIR)/arch/aarch64/boot/start.o"; \
+		exit 1; \
+	}
+	@test -f "$(PLATFORM_OBJECT)" || { \
+		printf "$(FEROS): missing %s\n" "$(PLATFORM_OBJECT)"; \
+		exit 1; \
+	}
+	@test -f "$(FEROS_ELF)" || { \
+		printf "$(FEROS): missing %s\n" "$(FEROS_ELF)"; \
+		exit 1; \
+	}
 	@printf "$(FEROS): inspecting AArch64 entry point...\n\n"
 	@$(OBJDUMP) -d $(BUILD_DIR)/arch/aarch64/boot/start.o
 	@printf "\n$(FEROS): inspecting $(p) early UART...\n\n"
