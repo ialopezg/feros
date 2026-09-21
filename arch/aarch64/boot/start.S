@@ -11,9 +11,17 @@
 .global _start
 .type _start, %function
 
+.extern platform_uart_init
 .extern platform_uart_putc
 
 _start:
+    /*
+     * Initialize the platform early console before producing any output.
+     *
+     * This call must not depend on a stack or C runtime.
+     */
+    bl      platform_uart_init
+
     mov     w0, #'F'
     bl      platform_uart_putc
 
