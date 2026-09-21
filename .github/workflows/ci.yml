@@ -23,8 +23,11 @@ jobs:
             gcc-aarch64-linux-gnu \
             binutils-aarch64-linux-gnu
 
-      - name: Build FeROS
-        run: make CROSS_COMPILE=aarch64-linux-gnu-
+      - name: Build all platforms
+        run: make CROSS_COMPILE=aarch64-linux-gnu- all
 
-      - name: Inspect FeROS build
-        run: make CROSS_COMPILE=aarch64-linux-gnu- inspect
+      - name: Inspect all artifacts
+        run: make CROSS_COMPILE=aarch64-linux-gnu- inspect-all
+
+      - name: Validate all artifacts
+        run: make CROSS_COMPILE=aarch64-linux-gnu- validate-all
