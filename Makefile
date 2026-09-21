@@ -63,6 +63,9 @@ RK3566_DDR := soc/rockchip/rk3566/firmware/ddr.bin
 # Tool responsible for building and validating RK3566 RKNS images.
 RK3566_IMAGE_TOOL := tools/image/rk3566/mkimage.py
 
+# Tool responsible for safely writing an X55 image to removable media.
+X55_MEDIA_TOOL := tools/media/x55/prepare.py
+
 # Final boot image prepared for the PowKiddy X55.
 X55_BOOT_IMAGE := $(BUILD_ROOT)/x55/boot/feros-x55.img
 
@@ -408,17 +411,13 @@ prepare-x55:
 # Target-media preparation
 # ---------------------------------------------------------------------------
 
-# Enter X55 target-media preparation without modifying physical media.
-#
-# Physical-media detection and writing are intentionally not enabled yet.
-# This target exists so destructive operations can later be added behind
-# explicit device verification and confirmation safeguards.
-prepare-target-x55:
+# Build, validate, and write the X55 boot image to confirmed removable media.
+prepare-target-x55: prepare-x55 $(X55_MEDIA_TOOL)
 	$(call major_header,Preparing X55 target media)
 	@printf '\n$(FEROS): target: PowKiddy X55\n'
 	@printf '$(FEROS): media:  microSD\n\n'
-	@printf '$(FEROS): physical-media writing is not enabled yet.\n'
-	@printf '$(FEROS): no storage device has been modified.\n'
+	@python3 $(X55_MEDIA_TOOL) \
+		--image $(X55_BOOT_IMAGE)
 
 # ---------------------------------------------------------------------------
 # Inspection
