@@ -20,6 +20,10 @@ $RECYCLE.BIN/
 # Build
 /build/
 
+# Python
+__pycache__/
+*.py[cod]
+
 # Releases
 /releases/
 

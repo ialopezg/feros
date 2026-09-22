@@ -63,8 +63,11 @@ RK3566_DDR := soc/rockchip/rk3566/firmware/ddr.bin
 # Tool responsible for building and validating RK3566 RKNS images.
 RK3566_IMAGE_TOOL := tools/image/rk3566/mkimage.py
 
-# Tool responsible for safely writing an X55 image to removable media.
-X55_MEDIA_TOOL := tools/media/x55/prepare.py
+# Host-independent entry point used to prepare physical target media.
+MEDIA_PREPARE_TOOL := tools/media/prepare.py
+
+# macOS backend used by the target-media preparation entry point.
+DARWIN_MEDIA_BACKEND := tools/media/host/darwin.py
 
 # Final boot image prepared for the PowKiddy X55.
 X55_BOOT_IMAGE := $(BUILD_ROOT)/x55/boot/feros-x55.img
@@ -411,12 +414,13 @@ prepare-x55:
 # Target-media preparation
 # ---------------------------------------------------------------------------
 
-# Build, validate, and write the X55 boot image to confirmed removable media.
-prepare-target-x55: prepare-x55 $(X55_MEDIA_TOOL)
+# Build, validate, and write the X55 image using the current host backend.
+prepare-target-x55: prepare-x55 $(MEDIA_PREPARE_TOOL) $(DARWIN_MEDIA_BACKEND)
 	$(call major_header,Preparing X55 target media)
 	@printf '\n$(FEROS): target: PowKiddy X55\n'
 	@printf '$(FEROS): media:  microSD\n\n'
-	@python3 $(X55_MEDIA_TOOL) \
+	@python3 $(MEDIA_PREPARE_TOOL) \
+		--target x55 \
 		--image $(X55_BOOT_IMAGE)
 
 # ---------------------------------------------------------------------------
